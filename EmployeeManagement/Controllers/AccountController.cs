@@ -108,14 +108,8 @@ namespace EmployeeManagement.Controllers
 
                 ModelState.AddModelError(string.Empty, "Invalid Login Attempt");
             }
-            return View(model);
-        }
 
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult AccessDenied()
-        {
-            return View();
+            return View(model);
         }
     }
 }
