@@ -37,8 +37,21 @@ namespace EmployeeManagement
             {
                 options.Password.RequiredLength = 10;
                 options.Password.RequiredUniqueChars = 3;
-                options.Password.RequireNonAlphanumeric = false;
-            }).AddEntityFrameworkStores<AppDbContext>();
+
+                options.SignIn.RequireConfirmedEmail = true;
+
+                options.Tokens.EmailConfirmationTokenProvider = "CustomEmailConfirmation";
+
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            })
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddDefaultTokenProviders()
+                .AddTokenProvider<CustomEmailConfirmationTokenProvider<ApplicationUser>>("CustomEmailConfirmation");
+
+            services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(5));
+
+            services.Configure<CustomEmailConfirmationTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromDays(3));
 
             services.AddMvc(options =>
             {
@@ -47,6 +60,16 @@ namespace EmployeeManagement
                                 .Build();
                 options.Filters.Add(new AuthorizeFilter(policy));
             }).AddXmlSerializerFormatters();
+
+            services.AddAuthentication()
+                .AddGoogle(options => {
+                    options.ClientId = "315486185091-nh5vrebhccmqq2lhl20f599kftn2s205.apps.googleusercontent.com";
+                    options.ClientSecret = "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";
+                })
+                .AddFacebook(options => {
+                    options.AppId = "781789859836145";
+                    options.AppSecret = "747e86c29e5dccddfbe996e3ef9e9dee";
+                });
 
             services.ConfigureApplicationCookie(options => 
             {
@@ -67,6 +90,7 @@ namespace EmployeeManagement
 
             services.AddSingleton<IAuthorizationHandler, CanEditOnlyOtherAdminRolesAndClaimsHandler>();
             services.AddSingleton<IAuthorizationHandler, SuperAdminHandler>();
+            services.AddSingleton<DataProtectionPurposeStrings>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
